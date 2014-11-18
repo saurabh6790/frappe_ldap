@@ -1,0 +1,16 @@
+
+{% block style %}{% include "templates/includes/login.css" %}{% endblock %}
+{% block content %}
+<form class="form-signin form-signup" role="form" action="/api/method/frappe_ldap.templates.pages.ldap_login.ldap_login">
+		<h2 class="form-signin-heading">{{ _("LDAP Login") }}</h2>
+		<input type="text" name="user"
+			class="form-control" placeholder="{{ _('User Name') }}" required autofocus>
+		<input type="password" name="pwd"
+			class="form-control" placeholder="{{ _('Password') }}" required>
+		<button class="btn btn-lg btn-primary btn-block btn-signup" type="submit">{{ _("Login") }}</button>
+</form>
+
+{% endblock %}
+
+
+{% block sidebar %}{% endblock %}
