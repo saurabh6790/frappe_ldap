@@ -30,7 +30,7 @@ System checks ldap for select interval and sync user profiles and applies specif
 ![LDAP-->Documents-->LDPA Settings](frappe_ldap/public/images/sc1.png)
 
 
-Added role mapper functionality, while creating a new profile it will check the mapped role and assigned it to respective(current) profile.<br> With this we can bypass manual role assignment process and automate the same. <br>To create mapper goto goto LDAP > Documents > LDAP ERP Role Mapper
+Added role mapper functionality, while creating a new profile it will check the mapped role and assigned it to respective(current) profile.<br> With this we can bypass manual role assignment process and automate the same. <br>To create mapper goto goto LDAP > Documents > LDAP ERP Role Mapper <br>
 Eg 1:
 
 ![LDAP-->Setup--> LDAP ERP Role Mapper](frappe_ldap/public/images/role_mapper.png)

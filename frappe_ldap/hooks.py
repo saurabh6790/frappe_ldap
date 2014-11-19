@@ -75,23 +75,17 @@ app_version = "0.0.1"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"frappe_ldap.tasks.all"
-# 	],
-# 	"daily": [
-# 		"frappe_ldap.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"frappe_ldap.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"frappe_ldap.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"frappe_ldap.tasks.monthly"
-# 	]
-# }
+scheduler_events = {
+	"daily": [
+		"frappe_ldap.sync_profile.check_profiles_daily"
+	],
+	"weekly": [
+		"frappe_ldap.sync_profile.check_profiles_weekly"
+	],
+	"monthly": [
+		"frappe_ldap.sync_profile.check_profiles_monthly"
+	]
+}
 
 # Testing
 # -------
