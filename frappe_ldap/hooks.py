@@ -33,6 +33,8 @@ app_version = "0.0.1"
 # Generators
 # ----------
 
+fixtures=["LDAP ERP Role Mapper"]
+
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
 
