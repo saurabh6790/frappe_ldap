@@ -7,10 +7,8 @@ from frappe import _
 
 @frappe.whitelist(allow_guest=True)
 def ldap_login(user, pwd, provider=None):
-	frappe.errprint([user, pwd])
-	ldap_authentication(user, pwd)
 	#### LDAP LOGIN LOGIC #####
-	ldap_authentication(user, pwd)
+	user=ldap_authentication(user, pwd)
 	
 	frappe.local.login_manager.user = user
 	frappe.local.login_manager.post_login()
@@ -25,11 +23,11 @@ def ldap_login(user, pwd, provider=None):
 	frappe.db.commit()
 
 def ldap_authentication(user, pwd):
-	frappe.errprint("test")
 	server_details = get_details()
 	user, user_id, status, role = ldap_auth(user,pwd,server_details)
 	check_profile(user, user_id, pwd, role)
 	check_if_enabled(user)
+	return user
 
 def ldap_auth(user, pwd, server_details):
 	from frappe_ldap.ldap.doctype.ldap_settings.ldap_settings import set_ldap_connection 
@@ -40,36 +38,33 @@ def ldap_auth(user, pwd, server_details):
 	user_id = None	
 	dn = None
 
-	connect, user_dn, base_dn = set_ldap_connection(server_details)
+	conn, user_dn, base_dn = set_ldap_connection(server_details)
 	filters = "uid=*"+user+"*"
-	
 	try:
-		connect.simple_bind_s(user_dn, server_details.get('pwd'))
-		result = connect.search_s(base_dn, ldap.SCOPE_SUBTREE, filters)
+		# l = ldap.initialize('ldap://ldap.forumsys.com/')
+		conn.simple_bind_s(user_dn, pwd)
+		result = conn.search_s(base_dn, ldap.SCOPE_SUBTREE, filters)
 		for dn, r in result:
-			dn = str(dn)	
+			dn = str(dn)
 			mail = str(r['mail'][0])
 			user_id = str(r['uid'][0])
-			role = str(r['description'][0])
-
+			role = r.get('description') if r.get('description') else 'Default'
 		if dn:
-			connect.simple_bind_s(dn,pwd)
+			conn.simple_bind_s(dn,pwd)
 			status = True
 		else:
 			self.fail("Not a valid LDAP user")
-
 	except ldap.LDAPError, e:
-		connect.unbind_s()
+		conn.unbind_s()
 		status = False
-	
+		print "Incorrect UserId or Password"
 	return mail, user_id, status, role
 
-def check_profile(user, user_id, pwd, role):
+def check_profile(user, user_id, pwd, role,enabled_profiles=None):
 	"check for profile, if not exist creates new profile"
 	profile = frappe.db.sql("select name from tabUser where name = %s",user)
 	if not profile:
-		# from webnotes.model.doc import Document
-		from frappe.utils import nowdate,  nowtime
+		from frappe.utils import nowdate, nowtime
 		d = frappe.new_doc("User")
 		d.owner = "Administrator"
 		d.email = user
@@ -79,7 +74,7 @@ def check_profile(user, user_id, pwd, role):
 		d.creation = nowdate() + ' ' + nowtime()
 		d.user_type = "System User"
 		d.save(ignore_permissions=True)
-
+		enabled_profiles.append(user_id)
 		assign_role(user, user_id, role)
 
 def assign_role(user, user_id, role):
@@ -89,13 +84,13 @@ def assign_role(user, user_id, role):
 		ur.parent=user
 		ur.parentfield='user_roles'
 		ur.parenttype='User'
-		ur.role= role_mapper[role]
-		ur.save(new=1)
+		ur.role= role[0]
+		ur.save()
 
 def get_role_list(roles):
 	role_list = [] 
 	for role in roles.split(','):
-		role_list.extend(frappe.db.get_value('Role Mapper Details', {'parent': role}, 'role', as_list=1))
+		role_list=frappe.db.sql("select role from `tabRole Mapper Details` where parent='%s'"%(role),as_list=1)
 	return role_list
 
 def check_if_enabled(user):
@@ -107,3 +102,4 @@ def check_if_enabled(user):
 
 def get_details():
 	return frappe.db.get_value("LDAP Settings",None,['ldap_server','user_dn','base_dn','pwd'],as_dict=1)
+

@@ -76,6 +76,9 @@ app_version = "0.0.1"
 # ---------------
 
 scheduler_events = {
+	"all": [
+		"frappe_ldap.sync_profile.check_profiles_daily"
+	],
 	"daily": [
 		"frappe_ldap.sync_profile.check_profiles_daily"
 	],

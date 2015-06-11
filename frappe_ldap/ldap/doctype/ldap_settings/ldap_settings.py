@@ -16,6 +16,8 @@ def set_ldap_connection(server_details):
 
 		# adjust this to your base dn for searching
 		base_dn = server_details.get('base_dn')
-
-		connect = ldap.open(server_details.get('ldap_server'))
+		try:
+			connect = ldap.initialize(server_details.get('ldap_server'))
+		except ldap.LDAPError, e:
+			print "Connection Filed!!! Contact System Manager"
 	return connect, user_dn, base_dn
