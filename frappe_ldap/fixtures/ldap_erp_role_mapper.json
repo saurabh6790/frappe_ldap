@@ -1,0 +1,14 @@
+[
+ {
+  "docstatus": 0, 
+  "doctype": "LDAP ERP Role Mapper", 
+  "erp_roles": [
+   {
+    "role": "Blogger"
+   }
+  ], 
+  "ldap_role": "Default", 
+  "modified": "2015-08-07 18:28:03.970420", 
+  "name": "Default"
+ }
+]

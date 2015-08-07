@@ -9,7 +9,7 @@ from frappe import _
 def ldap_login(user, pwd, provider=None):
 	#### LDAP LOGIN LOGIC #####
 	user=ldap_authentication(user, pwd)
-	
+
 	frappe.local.login_manager.user = user
 	frappe.local.login_manager.post_login()
 
@@ -26,24 +26,25 @@ def ldap_authentication(user, pwd):
 	server_details = get_details()
 	user, user_id, status, role = ldap_auth(user,pwd,server_details)
 	check_profile(user, user_id, pwd, role)
-	check_if_enabled(user)
 	return user
 
 def ldap_auth(user, pwd, server_details):
-	from frappe_ldap.ldap.doctype.ldap_settings.ldap_settings import set_ldap_connection 
+	from frappe_ldap.ldap.doctype.ldap_settings.ldap_settings import set_ldap_connection
 	import ldap
 
-	status = True	
+	status = True
 	mail = None
-	user_id = None	
+	user_id = None
 	dn = None
 
 	conn, user_dn, base_dn = set_ldap_connection(server_details)
 	filters = "uid=*"+user+"*"
+	role = 'Default'
 	try:
 		# l = ldap.initialize('ldap://ldap.forumsys.com/')
 		conn.simple_bind_s(user_dn, pwd)
 		result = conn.search_s(base_dn, ldap.SCOPE_SUBTREE, filters)
+
 		for dn, r in result:
 			dn = str(dn)
 			mail = str(r['mail'][0])
@@ -53,16 +54,20 @@ def ldap_auth(user, pwd, server_details):
 			conn.simple_bind_s(dn,pwd)
 			status = True
 		else:
-			self.fail("Not a valid LDAP user")
+			frappe.msgprint("Not a valid LDAP user", raise_exception=1)
 	except ldap.LDAPError, e:
 		conn.unbind_s()
 		status = False
-		print "Incorrect UserId or Password"
+		frappe.msgprint("Incorrect UserId or Password", raise_exception=1)
 	return mail, user_id, status, role
 
-def check_profile(user, user_id, pwd, role,enabled_profiles=None):
+def check_profile(user, user_id, pwd, role,enabled_profiles=[]):
 	"check for profile, if not exist creates new profile"
 	profile = frappe.db.sql("select name from tabUser where name = %s",user)
+
+	#Make session user as Admin to create share doc entry
+	frappe.session.user = 'Administrator'
+
 	if not profile:
 		from frappe.utils import nowdate, nowtime
 		d = frappe.new_doc("User")
@@ -88,7 +93,7 @@ def assign_role(user, user_id, role):
 		ur.save()
 
 def get_role_list(roles):
-	role_list = [] 
+	role_list = []
 	for role in roles.split(','):
 		role_list=frappe.db.sql("select role from `tabRole Mapper Details` where parent='%s'"%(role),as_list=1)
 	return role_list
@@ -102,4 +107,3 @@ def check_if_enabled(user):
 
 def get_details():
 	return frappe.db.get_value("LDAP Settings",None,['ldap_server','user_dn','base_dn','pwd'],as_dict=1)
-
